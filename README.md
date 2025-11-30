@@ -2,9 +2,6 @@
 
 University Tuition Payment System - REST API Project
 
-## 🚀 Project Status
-
-✅ **Project is operational and production-ready!**
 
 ## 📋 Features
 
@@ -200,41 +197,28 @@ Request Flow:
 4. **Access Swagger UI**
    - http://localhost:8080/swagger-ui.html
 
-## 🧪 Testing
+## 🛠️ Challenges & Technical Solutions (Engineering Decisions)
 
-### Method 1: Postman Collection
-1. Open Postman
-2. Import `postman_collection.json` file
-3. Set `baseUrl` variable (default: http://localhost:8080)
-4. Run "Login" request (JWT token will be automatically saved)
-5. Test other endpoints
+During the development lifecycle, we encountered several architectural challenges and implemented robust solutions:
 
-### Method 2: VS Code REST Client
-1. Install REST Client extension in VS Code
-2. Open `test-api.http` file
-3. Set `@baseUrl` variable
-4. Click "Send Request" button above each request
+### 1. Spring Security & Filter Chain Ordering
+* **Challenge:** We faced a critical `BeanCreationException` during startup because Spring Security could not determine the order of our custom `JwtAuthFilter` and `LoggingFilter`. Additionally, we had issues with `403 Forbidden` errors on public endpoints due to incorrect filter bypass logic.
+* **Solution:** We explicitly defined the filter chain order in `SecurityConfig`, placing both filters before the standard `UsernamePasswordAuthenticationFilter`. We also removed the `shouldNotFilter` logic and instead used `permitAll()` in the security chain to correctly handle public access while keeping the context aware.
 
-### Method 3: Swagger UI
-1. Start the application
-2. Go to http://localhost:8080/swagger-ui.html
-3. Click "Authorize" button and enter JWT token
-4. Test endpoints
+### 2. Azure Consumption Tier Rate Limiting
+* **Challenge:** The project required a "Daily Rate Limit" per student. However, the **Azure API Management Consumption (Free) Tier** does not support `quota-by-key` or long-duration stateful policies (max 300s).
+* **Solution:** We moved the rate-limiting logic to the **Application Layer (Java)**. We implemented a thread-safe `RateLimitingService` using `ConcurrentHashMap` to track requests per student ID. This ensured compliance with requirements without incurring extra cloud costs.
 
-### Method 4: cURL
-```bash
-# Login
-curl -X POST http://localhost:8080/api/v1/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}'
+### 3. Transactional Payment Integrity
+* **Challenge:** Initial implementation allowed payments even if database updates failed, creating data inconsistency.
+* **Solution:** We utilized Spring's `@Transactional` annotation in `TuitionService`. This ensures that verifying the student, deducting the balance, and saving the payment record happens as an **atomic operation**. If any step fails, the entire transaction rolls back.
 
-# Query Tuition (Mobile App)
-curl http://localhost:8080/api/v1/tuition/2023001
+### 4. API Gateway Routing
+* **Challenge:** Integrating the Backend with Azure Gateway caused `404 Not Found` errors due to URL suffix duplication (e.g., `/api/v1/api/v1/...`).
+* **Solution:** We configured the Gateway with an **empty URL suffix**, mapping the backend routes 1:1. This simplified the routing logic and eliminated path rewriting issues.
 
-# Query Tuition (Banking App - Auth Required)
-curl http://localhost:8080/api/v1/banking/tuition/2023001 \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
-```
+---
+
 
 ## ☁️ Azure Deployment
 
