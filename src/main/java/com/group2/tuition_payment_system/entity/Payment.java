@@ -4,6 +4,12 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
 
+/**
+ * Entity class representing a Payment record.
+ * Stores payment transaction information including student, term, amount, and payment date.
+ *
+ * @author Group 2
+ */
 @Entity
 @Data
 @Table(name = "payments")

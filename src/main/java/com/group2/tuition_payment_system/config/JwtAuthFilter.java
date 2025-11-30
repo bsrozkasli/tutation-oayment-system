@@ -6,6 +6,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,6 +17,14 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+/**
+ * JWT Authentication Filter for Spring Security.
+ * Intercepts HTTP requests and validates JWT tokens from Authorization headers.
+ * Sets authentication context for valid tokens.
+ *
+ * @author Group 2
+ */
+@Order(1)
 @Component
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
@@ -54,17 +63,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
         filterChain.doFilter(request, response);
     }
+
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-
         String path = request.getServletPath();
 
         return path.startsWith("/swagger-ui")
                 || path.startsWith("/v3/api-docs")
-                || path.startsWith("/swagger-ui.html")
-                || path.startsWith("/api/v1/auth")
-                || path.startsWith("/api/v1/tuition")
-                || path.startsWith("/api/v1/payment");
-    }
+                || path.startsWith("/swagger-ui.html");
 
+    }
 }

@@ -14,6 +14,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+/**
+ * Utility class for JWT token operations.
+ * Handles token generation, validation, and extraction of claims.
+ * Provides methods for creating and verifying JWT tokens used for authentication.
+ *
+ * @author Group 2
+ */
 @Component
 public class JwtUtil {
 

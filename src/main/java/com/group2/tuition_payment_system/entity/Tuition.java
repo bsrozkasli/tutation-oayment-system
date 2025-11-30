@@ -3,6 +3,13 @@ package com.group2.tuition_payment_system.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+/**
+ * Entity class representing a Tuition record.
+ * Stores tuition fee information for a specific student and term,
+ * including the total amount and remaining balance.
+ *
+ * @author Group 2
+ */
 @Entity
 @Data
 @Table(name = "tuitions")

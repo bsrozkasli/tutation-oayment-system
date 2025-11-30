@@ -9,14 +9,13 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface TuitionRepository extends JpaRepository<Tuition, Long> {
 
     List<Tuition> findByStudent_StudentNo(String studentNo);
 
-    Optional<Tuition> findByStudent_StudentNoAndTerm(String studentNo, String term);
+    List<Tuition> findByStudent_StudentNoAndTerm(String studentNo, String term);
 
 
     @Query("SELECT SUM(t.amount - t.balance) FROM Tuition t WHERE t.student.studentNo = :studentNo")

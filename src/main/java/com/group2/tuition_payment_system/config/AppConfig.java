@@ -14,6 +14,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
+/**
+ * Application configuration class.
+ * Configures authentication providers, user details service, and password encoding.
+ * Sets up in-memory users for authentication (admin and bank user).
+ *
+ * @author Group 2
+ */
 @Configuration
 @RequiredArgsConstructor
 public class AppConfig {

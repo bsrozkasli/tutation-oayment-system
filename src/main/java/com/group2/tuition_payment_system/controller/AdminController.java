@@ -15,6 +15,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * REST Controller for admin operations.
+ * Handles administrative tasks such as adding tuition records,
+ * batch uploading CSV files, and querying unpaid tuition status.
+ * All endpoints require ADMIN role authentication.
+ *
+ * @author Group 2
+ */
 @RestController
 @RequestMapping("/api/v1/admin")
 @RequiredArgsConstructor
@@ -34,10 +42,14 @@ public class AdminController {
 
 
     @PostMapping(value = "/batch-upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Batch Upload", description = "Uploads CSV file for bulk tuition entry.")
+    @Operation(summary = "Batch Upload", description = "Uploads CSV file for bulk tuition entry. CSV format: studentNo,term,amount")
     public ResponseEntity<String> uploadBatch(@RequestParam("file") MultipartFile file) {
-
-        return ResponseEntity.ok("Batch upload processed successfully.");
+        try {
+            int processedCount = tuitionService.processBatchUpload(file);
+            return ResponseEntity.ok("Batch upload processed successfully. " + processedCount + " records added.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error processing batch upload: " + e.getMessage());
+        }
     }
 
 

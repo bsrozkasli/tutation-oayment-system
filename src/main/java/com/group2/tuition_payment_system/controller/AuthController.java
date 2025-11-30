@@ -13,6 +13,13 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * REST Controller for authentication operations.
+ * Handles user login and JWT token generation.
+ * Provides endpoint for authenticating users and obtaining JWT tokens.
+ *
+ * @author Group 2
+ */
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
