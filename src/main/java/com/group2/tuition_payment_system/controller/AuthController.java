@@ -27,7 +27,6 @@ public class AuthController {
     @Operation(summary = "Login", description = "Returns a JWT token. Use user: 'admin', pass: 'admin123'")
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
 
-
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );

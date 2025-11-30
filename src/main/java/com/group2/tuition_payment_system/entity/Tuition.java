@@ -20,10 +20,5 @@ public class Tuition {
 
     private Double amount;
 
-    private Double paidAmount = 0.0;
-
-
-    public Double getRemainingAmount() {
-        return this.amount - this.paidAmount;
-    }
+    private Double balance;
 }

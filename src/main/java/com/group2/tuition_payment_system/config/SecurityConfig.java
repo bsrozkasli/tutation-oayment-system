@@ -25,17 +25,19 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-
+                        // azure ve swagger izinleri
+                        .requestMatchers("/", "/index.html").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+
+                        //auth istemeyenler
                         .requestMatchers("/api/v1/auth/**").permitAll()
-
-
                         .requestMatchers("/api/v1/tuition/**").permitAll()
                         .requestMatchers("/api/v1/payment/**").permitAll()
 
-
+                        //admin
                         .requestMatchers("/api/v1/admin/**").authenticated()
 
+                        // Diğer tüm istekler için token zorunlu
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider)
