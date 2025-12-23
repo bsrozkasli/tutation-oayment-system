@@ -8,6 +8,8 @@ University Tuition Payment System with AI-powered chat interface.
 |-----------|-----|
 | **Azure API Gateway** | https://gateway-group2-basar.azure-api.net |
 | **Backend** | https://tutation-payment-system.azurewebsites.net |
+| **Swagger UI** | https://tutation-payment-system.azurewebsites.net/swagger-ui/index.html |
+| **API Docs** | https://tutation-payment-system.azurewebsites.net/v3/api-docs |
 | **Frontend** | Run locally: `npm start` |
 
 ## 🏗️ Architecture
