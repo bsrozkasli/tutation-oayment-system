@@ -160,31 +160,39 @@ public class GeminiService {
      * Build prompt for intent parsing
      */
     private String buildIntentParsingPrompt(String userMessage) {
-        return String.format("""
-                Analyze the following user message and extract the intent and parameters.
-                The user is interacting with a tuition payment system.
+        return String.format(
+                """
+                        Analyze the following user message and extract the intent and parameters.
+                        The user is interacting with a tuition payment system.
 
-                Possible intents:
-                1. QUERY_TUITION - User wants to check their tuition balance (requires studentNo)
-                2. PAY_TUITION - User wants to pay tuition (requires studentNo, term, amount)
-                3. UNPAID_TUITION - User wants to see unpaid tuitions (requires term)
+                        Possible intents:
+                        1. QUERY_TUITION - User wants to check their tuition balance (requires studentNo)
+                        2. PAY_TUITION - User wants to pay tuition (requires studentNo, term, amount)
+                        3. UNPAID_TUITION - User wants to see unpaid tuitions (requires term)
 
-                User message: "%s"
+                        User message: "%s"
 
-                Respond in JSON format only:
-                {
-                  "intent": "QUERY_TUITION|PAY_TUITION|UNPAID_TUITION",
-                  "studentNo": "extracted student number or null",
-                  "term": "extracted term (e.g., 2025-SUMMER) or null",
-                  "amount": extracted amount as number or null
-                }
+                        IMPORTANT EXTRACTION RULES:
+                        - studentNo: A 6-8 digit number like 2023001, 20210001, 2023002. This is NOT a year!
+                          Look for phrases like "student 2023001" or "student number 20210001".
+                          The number after "student" or "student number" is the studentNo.
+                        - term: Format YYYY-SEASON like 2025-SPRING, 2024-FALL, 2025-SUMMER.
+                          The YYYY part (e.g., 2025) in a term is NOT a student number!
+                        - amount: A payment amount in dollars (e.g., 500, 1000, 500.00)
 
-                Extract student numbers (format: numbers like 2023001, 2023002, etc.)
-                Extract terms (format: YYYY-SEASON like 2025-SUMMER, 2024-FALL, etc.)
-                Extract amounts (numbers representing payment amounts)
+                        Respond ONLY with this exact JSON format:
+                        {
+                          "intent": "QUERY_TUITION or PAY_TUITION or UNPAID_TUITION",
+                          "studentNo": "the student number as string or null",
+                          "term": "the term as string or null",
+                          "amount": numeric_amount_or_null
+                        }
 
-                If intent cannot be determined, use QUERY_TUITION as default.
-                """, userMessage);
+                        Example 1: "What is tuition for student 2023001?" → studentNo: "2023001", term: null
+                        Example 2: "Pay 500 for student 2023001 for 2025-SPRING" → studentNo: "2023001", term: "2025-SPRING", amount: 500
+                        Example 3: "Show unpaid for 2025-SPRING" → studentNo: null, term: "2025-SPRING"
+                        """,
+                userMessage);
     }
 
     /**
@@ -291,26 +299,78 @@ public class GeminiService {
             intent = "UNPAID_TUITION";
         }
 
-        // Extract student number (pattern: 4-7 digit number)
-        Pattern studentNoPattern = Pattern.compile("\\b\\d{4,7}\\b");
-        Matcher studentMatcher = studentNoPattern.matcher(message);
-        String studentNo = studentMatcher.find() ? studentMatcher.group() : null;
-
-        // Extract term (pattern: YYYY-SEASON)
-        Pattern termPattern = Pattern.compile("\\b\\d{4}-(SPRING|SUMMER|FALL|WINTER|SPR|SUM|FAL|WIN)\\b",
+        // Extract term FIRST (pattern: YYYY-SEASON) - so we can exclude it from student
+        // number search
+        Pattern termPattern = Pattern.compile("\\b(\\d{4})-(SPRING|SUMMER|FALL|WINTER|SPR|SUM|FAL|WIN)\\b",
                 Pattern.CASE_INSENSITIVE);
         Matcher termMatcher = termPattern.matcher(message);
         String term = termMatcher.find() ? termMatcher.group().toUpperCase() : null;
 
-        // Extract amount (pattern: numbers with currency or just numbers)
-        Pattern amountPattern = Pattern.compile("\\$?\\s*(\\d+(?:\\.\\d{2})?)");
-        Matcher amountMatcher = amountPattern.matcher(message);
+        // Remove term from message before extracting student number to avoid confusion
+        String messageWithoutTerm = message;
+        if (term != null) {
+            messageWithoutTerm = message.replaceAll("(?i)\\b\\d{4}-(SPRING|SUMMER|FALL|WINTER|SPR|SUM|FAL|WIN)\\b", "");
+        }
+
+        // Extract student number (pattern: 6-8 digit number typically, or "student"
+        // followed by number)
+        // First try explicit "student" + number pattern
+        Pattern explicitStudentPattern = Pattern.compile(
+                "(?:student|öğrenci)\\s*(?:no|number|numarası|id)?[:\\s]*(\\d{4,8})", Pattern.CASE_INSENSITIVE);
+        Matcher explicitMatcher = explicitStudentPattern.matcher(message);
+        String studentNo = null;
+
+        if (explicitMatcher.find()) {
+            studentNo = explicitMatcher.group(1);
+        } else {
+            // Fallback: look for 6-8 digit numbers (more likely to be student IDs, not
+            // years)
+            Pattern studentNoPattern = Pattern.compile("\\b(\\d{6,8})\\b");
+            Matcher studentMatcher = studentNoPattern.matcher(messageWithoutTerm);
+            if (studentMatcher.find()) {
+                studentNo = studentMatcher.group(1);
+            } else {
+                // Last resort: 4-7 digit numbers but NOT common years (2020-2030 range)
+                Pattern shortStudentPattern = Pattern.compile("\\b(\\d{4,7})\\b");
+                Matcher shortMatcher = shortStudentPattern.matcher(messageWithoutTerm);
+                while (shortMatcher.find()) {
+                    String candidate = shortMatcher.group(1);
+                    int num = Integer.parseInt(candidate);
+                    // Exclude years 2020-2030 and very small numbers
+                    if (num < 2020 || num > 2030) {
+                        studentNo = candidate;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Extract amount - look for currency patterns or "pay X", "amount X"
         Double amount = null;
-        if (amountMatcher.find()) {
+        // Try explicit amount patterns first
+        Pattern explicitAmountPattern = Pattern.compile("(?:pay|amount|ödeme|miktar|\\$)\\s*(\\d+(?:\\.\\d{2})?)",
+                Pattern.CASE_INSENSITIVE);
+        Matcher explicitAmountMatcher = explicitAmountPattern.matcher(message);
+        if (explicitAmountMatcher.find()) {
             try {
-                amount = Double.parseDouble(amountMatcher.group(1));
+                amount = Double.parseDouble(explicitAmountMatcher.group(1));
             } catch (NumberFormatException e) {
                 // Ignore
+            }
+        } else {
+            // Look for currency symbols
+            Pattern currencyPattern = Pattern.compile(
+                    "\\$\\s*(\\d+(?:\\.\\d{2})?)|(\\d+(?:\\.\\d{2})?)\\s*(?:dollars?|lira|tl)",
+                    Pattern.CASE_INSENSITIVE);
+            Matcher currencyMatcher = currencyPattern.matcher(message);
+            if (currencyMatcher.find()) {
+                try {
+                    String amountStr = currencyMatcher.group(1) != null ? currencyMatcher.group(1)
+                            : currencyMatcher.group(2);
+                    amount = Double.parseDouble(amountStr);
+                } catch (NumberFormatException e) {
+                    // Ignore
+                }
             }
         }
 
