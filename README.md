@@ -1,8 +1,8 @@
 # 💳 Tuition Payment System
+youtube https://youtu.be/Ep2Vk-8U24g
 
-A university tuition payment system with an AI-powered chat interface, built as the final project for **SE4458 - Software Architecture and Design of Modern Large-Scale Systems**.
 
-> **Group 2** | December 2024
+
 
 ---
 
@@ -14,14 +14,8 @@ A university tuition payment system with an AI-powered chat interface, built as 
 - [Technology Stack](#️-technology-stack)
 - [API Reference](#-api-reference)
 - [AI Chat Assistant](#-ai-chat-assistant)
-- [Getting Started](#-getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Backend Setup](#backend-setup)
-  - [Frontend Setup](#frontend-setup)
-- [Configuration](#️-configuration)
+- [Testing Guide](#-testing-guide)
 - [Rate Limiting & Caching](#-rate-limiting--caching)
-- [Testing](#-testing)
-- [Deployment](#-deployment)
 - [Demo](#-demo)
 
 ---
@@ -36,19 +30,21 @@ A university tuition payment system with an AI-powered chat interface, built as 
 - 🔒 **Rate Limiting** - Protection against abuse (frontend & backend)
 - 📱 **Real-time Messaging** - Firebase Firestore integration
 - 📖 **API Documentation** - Swagger/OpenAPI support
+- ☁️ **Cloud Deployment** - Fully deployed on Microsoft Azure
 
 ---
 
 ## 🌐 Live Deployment
 
-| Component | URL |
-|-----------|-----|
-| 🌐 **Azure API Gateway** | [gateway-group2-basar.azure-api.net](https://gateway-group2-basar.azure-api.net) |
-| ⚙️ **Backend API** | [tutation-payment-system.azurewebsites.net](https://tutation-payment-system.azurewebsites.net) |
-| 📖 **Swagger UI** | [/swagger-ui/index.html](https://tutation-payment-system.azurewebsites.net/swagger-ui/index.html) |
-| 📄 **OpenAPI Docs** | [/v3/api-docs](https://tutation-payment-system.azurewebsites.net/v3/api-docs) |
+| Component | URL | Status |
+|-----------|-----|--------|
+| 🎨 **Frontend** | [tutation-payment-system.azurewebsites.net](https://tutation-payment-system.azurewebsites.net) | ✅ Live |
+| 🌐 **API Gateway** | [gateway-group2-basar.azure-api.net](https://gateway-group2-basar.azure-api.net) | ✅ Live |
+| ⚙️ **Backend API** | [tutation-payment-system.azurewebsites.net](https://tutation-payment-system.azurewebsites.net) | ✅ Live |
+| 📖 **Swagger UI** | [/swagger-ui/index.html](https://tutation-payment-system.azurewebsites.net/swagger-ui/index.html) | ✅ Live |
+| 📄 **OpenAPI Docs** | [/v3/api-docs](https://tutation-payment-system.azurewebsites.net/v3/api-docs) | ✅ Live |
 
-> **Note**: Frontend runs locally. See [Getting Started](#-getting-started) section.
+> 🚀 **All components are deployed and running on Azure!**
 
 ---
 
@@ -56,7 +52,8 @@ A university tuition payment system with an AI-powered chat interface, built as 
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│               React Frontend (Chat Interface)               │
+│         React Frontend (Azure App Service)                  │
+│  ├─ AI Chat Interface                                       │
 │  ├─ Firebase Firestore for real-time messaging              │
 │  └─ Rate limiting: 15 requests per session                  │
 └─────────────────────────┬───────────────────────────────────┘
@@ -65,14 +62,17 @@ A university tuition payment system with an AI-powered chat interface, built as 
 ┌─────────────────────────────────────────────────────────────┐
 │            Azure API Management Gateway                      │
 │            gateway-group2-basar.azure-api.net                │
+│  ├─ CORS Policy Configuration                               │
+│  └─ API Routing & Management                                │
 └─────────────────────────┬───────────────────────────────────┘
                           │ HTTPS
                           ▼
 ┌─────────────────────────────────────────────────────────────┐
 │            Spring Boot Backend (Azure App Service)           │
-│  ├─ AI Intent Parsing (Google Gemini API)                    │
+│  ├─ AI Intent Parsing (Google Gemini v1 API)                │
 │  ├─ JWT Authentication                                       │
-│  └─ Rate limiting: 3 queries per student per day             │
+│  ├─ Rate limiting: 3 queries per student per day             │
+│  └─ RESTful API Endpoints                                   │
 └───────────────┬─────────────────────┬───────────────────────┘
                 │                     │
                 ▼                     ▼
@@ -91,10 +91,11 @@ A university tuition payment system with an AI-powered chat interface, built as 
 | **Frontend** | React 19, Firebase Firestore |
 | **Backend** | Spring Boot 3.4, Java 21 |
 | **Database** | PostgreSQL (Azure Database) |
-| **AI** | Google Gemini API |
+| **AI** | Google Gemini API (v1 Stable) |
 | **Gateway** | Azure API Management |
 | **Auth** | JWT (JSON Web Tokens) |
 | **Docs** | SpringDoc OpenAPI (Swagger) |
+| **Deployment** | Azure App Service, Azure API Management |
 
 ---
 
@@ -136,91 +137,225 @@ The AI assistant understands natural language and performs tuition operations au
 ### How It Works
 
 1. User sends a natural language message
-2. Google Gemini AI parses the intent and extracts parameters
+2. Google Gemini AI (v1 stable) parses the intent and extracts parameters
 3. Backend executes the corresponding tuition API
 4. Response is formatted and returned to the user
+5. Results are cached for 1 hour to reduce API costs
 
 ---
 
-## 🚀 Getting Started
+## 🧪 Testing Guide
 
-### Prerequisites
+### Test Scenario 1: AI Chat - Query Tuition
 
-- **Java 21** or higher
-- **Node.js 18** or higher
-- **PostgreSQL** database (or use Azure)
-- **Google Gemini API Key**
-- **Firebase Project** (for Firestore)
+**Objective**: Verify AI can understand natural language and query tuition balance.
 
-### Backend Setup
+**Steps**:
+1. Open [https://tutation-payment-system.azurewebsites.net](https://tutation-payment-system.azurewebsites.net)
+2. In the chat input, type: `"Check my tuition balance for student 2023001"`
+3. Press Send
 
-```bash
-# Navigate to backend directory
-cd backend
+**Expected Result**:
+- ✅ AI responds with tuition balance information
+- ✅ No CORS errors in browser console
+- ✅ Response time < 3 seconds
 
-# Configure environment (see Configuration section)
-# Create secret.properties file
-
-# Run the application
-./mvnw spring-boot:run
+**Sample Response**:
 ```
-
-The backend will start at `http://localhost:8080`
-
-### Frontend Setup
-
-```bash
-# Navigate to frontend directory
-cd frontend
-
-# Install dependencies
-npm install
-
-# Configure environment (see Configuration section)
-# Create .env file
-
-# Start development server
-npm start
+Your tuition balance for student 2023001:
+- Term: 2025-SUMMER
+- Amount: 5000 TL
+- Status: Unpaid
 ```
-
-The frontend will start at `http://localhost:3000`
 
 ---
 
-## ⚙️ Configuration
+### Test Scenario 2: AI Chat - Pay Tuition
 
-### Backend Configuration
+**Objective**: Verify AI can process payment requests.
 
-Create `backend/src/main/resources/secret.properties`:
+**Steps**:
+1. In the chat, type: `"Pay 1000 TL for term 2025-SUMMER, student 2023001"`
+2. Press Send
 
-```properties
-# Google Gemini AI
-gemini.api.key=your-gemini-api-key
+**Expected Result**:
+- ✅ Payment is processed successfully
+- ✅ Confirmation message with updated balance
+- ✅ Database is updated
 
-# Database
-spring.datasource.url=jdbc:postgresql://your-host:5432/your-db
-spring.datasource.username=your-username
-spring.datasource.password=your-password
+**Sample Response**:
+```
+Payment successful!
+- Amount paid: 1000 TL
+- Remaining balance: 4000 TL
+- Term: 2025-SUMMER
 ```
 
-### Frontend Configuration
+---
 
-Create `frontend/.env`:
+### Test Scenario 3: AI Chat - Unpaid Tuitions
 
-```env
-# API Gateway URL
-REACT_APP_API_GATEWAY_URL=https://gateway-group2-basar.azure-api.net
+**Objective**: Verify AI can query unpaid tuitions for a term.
 
-# Firebase Configuration
-REACT_APP_FIREBASE_API_KEY=your-firebase-api-key
-REACT_APP_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-REACT_APP_FIREBASE_PROJECT_ID=your-project-id
-REACT_APP_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
-REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
-REACT_APP_FIREBASE_APP_ID=your-app-id
+**Steps**:
+1. In the chat, type: `"Show unpaid tuitions for 2025-SUMMER"`
+2. Press Send
+
+**Expected Result**:
+- ✅ List of all unpaid tuitions for the term
+- ✅ Formatted table or list
+
+**Sample Response**:
+```
+Unpaid tuitions for 2025-SUMMER:
+1. Student 2023001 - 4000 TL
+2. Student 2023002 - 5000 TL
+3. Student 2023003 - 3500 TL
 ```
 
-> ⚠️ **Security Note**: Never commit `.env` or `secret.properties` files to version control!
+---
+
+### Test Scenario 4: Rate Limiting
+
+**Objective**: Verify rate limiting is working correctly.
+
+**Steps**:
+1. Send 15 messages in quick succession
+2. Try to send the 16th message
+
+**Expected Result**:
+- ✅ First 15 messages are processed
+- ✅ 16th message shows rate limit error
+- ❌ Error message: "You have reached the maximum number of requests (15). Please refresh the page."
+
+---
+
+### Test Scenario 5: API Direct Access
+
+**Objective**: Test API endpoints directly via Swagger.
+
+**Steps**:
+1. Open [Swagger UI](https://tutation-payment-system.azurewebsites.net/swagger-ui/index.html)
+2. Navigate to `/api/v1/tuition/{studentNo}`
+3. Click "Try it out"
+4. Enter student number: `2023001`
+5. Click "Execute"
+
+**Expected Result**:
+- ✅ Status Code: 200 OK
+- ✅ JSON response with tuition data
+
+**Sample Response**:
+```json
+{
+  "studentNo": "2023001",
+  "term": "2025-SUMMER",
+  "amount": 5000.0,
+  "paid": false
+}
+```
+
+---
+
+### Test Scenario 6: Admin Authentication
+
+**Objective**: Verify JWT authentication for admin endpoints.
+
+**Steps**:
+1. Open [Swagger UI](https://tutation-payment-system.azurewebsites.net/swagger-ui/index.html)
+2. Navigate to `/api/v1/auth/login`
+3. Click "Try it out"
+4. Enter credentials:
+   ```json
+   {
+     "username": "admin",
+     "password": "admin123"
+   }
+   ```
+5. Click "Execute"
+
+**Expected Result**:
+- ✅ Status Code: 200 OK
+- ✅ JWT token in response
+
+**Sample Response**:
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+---
+
+### Test Scenario 7: Batch Upload (Admin)
+
+**Objective**: Test CSV batch upload functionality.
+
+**Steps**:
+1. Login and get JWT token (see Test Scenario 6)
+2. Navigate to `/api/v1/admin/batch-upload` in Swagger
+3. Click "Authorize" and paste JWT token
+4. Upload a CSV file with format:
+   ```csv
+   studentNo,term,amount
+   2023001,2025-SUMMER,5000
+   2023002,2025-SUMMER,5500
+   ```
+5. Click "Execute"
+
+**Expected Result**:
+- ✅ Status Code: 200 OK
+- ✅ All records uploaded successfully
+- ✅ Database contains new records
+
+---
+
+### Test Scenario 8: CORS Verification
+
+**Objective**: Verify CORS is properly configured.
+
+**Steps**:
+1. Open browser DevTools (F12)
+2. Go to Console tab
+3. Send a chat message
+4. Check for CORS errors
+
+**Expected Result**:
+- ✅ No CORS errors
+- ✅ Requests to `gateway-group2-basar.azure-api.net` succeed
+- ✅ Response headers include `Access-Control-Allow-Origin`
+
+---
+
+### Test Scenario 9: Caching Verification
+
+**Objective**: Verify intent caching is working.
+
+**Steps**:
+1. Send: `"Check balance for student 2023001"`
+2. Wait 2 seconds
+3. Send the exact same message again
+4. Check backend logs
+
+**Expected Result**:
+- ✅ First request: Cache MISS → Gemini API called
+- ✅ Second request: Cache HIT → No Gemini API call
+- ✅ Response time for second request < 500ms
+
+---
+
+### Test Scenario 10: Error Handling
+
+**Objective**: Verify graceful error handling.
+
+**Steps**:
+1. Send: `"Check balance for student 9999999"` (non-existent student)
+2. Observe response
+
+**Expected Result**:
+- ✅ Friendly error message
+- ✅ No stack traces exposed
+- ❌ Error: "Student not found"
 
 ---
 
@@ -247,54 +382,32 @@ The system caches AI-parsed intents to reduce Gemini API usage:
 
 ---
 
-## 🧪 Testing
-
-### Backend Tests
-
-```bash
-cd backend
-./mvnw test
-```
-
-### API Testing with Postman
-
-Import the included Postman collection:
-- `TuitionPaymentAPI.postman_collection.json`
-
----
-
-## 🚀 Deployment
-
-### Azure Deployment Checklist
-
-- [x] Backend deployed to Azure App Service
-- [x] PostgreSQL database provisioned on Azure
-- [x] Azure API Management Gateway configured
-- [x] Environment variables set in Azure portal
-- [ ] Frontend can be deployed to Azure Static Web Apps or run locally
-
-### Environment Variables for Azure
-
-Set these in Azure App Service → Configuration → Application Settings:
-
-| Name | Value |
-|------|-------|
-| `GEMINI_API_KEY` | your-gemini-api-key |
-| `SPRING_DATASOURCE_URL` | jdbc:postgresql://... |
-| `SPRING_DATASOURCE_USERNAME` | your-username |
-| `SPRING_DATASOURCE_PASSWORD` | your-password |
-
----
-
 ## 📹 Demo
 
 ### Video Demonstration
 
-[🎥 Watch Project Demo on YouTube](https://youtube.com/your-video-link)
+> 🎥 **Demo video will be added here**
 
 ### Screenshots
 
-> *Add screenshots of the chat interface and admin dashboard here*
+> 📸 **Screenshots will be added here**
+
+---
+
+## 🚀 Deployment Architecture
+
+### Azure Resources
+
+- **App Service**: Hosts both frontend and backend
+- **API Management**: Gateway for API routing and CORS
+- **PostgreSQL Database**: Azure Database for PostgreSQL
+- **Application Insights**: Monitoring and logging
+
+### CI/CD Pipeline
+
+- **Source Control**: GitHub
+- **Deployment**: Automatic deployment via GitHub Actions
+- **Commits are automatically deployed to Azure**
 
 ---
 
@@ -304,12 +417,6 @@ Set these in Azure App Service → Configuration → Application Settings:
 
 ---
 
-## 📄 License
 
-This project is developed for educational purposes as part of the SE4458 course.
-
----
-
-<p align="center">
-  Made with ❤️ by Group 2
+2
 </p>
