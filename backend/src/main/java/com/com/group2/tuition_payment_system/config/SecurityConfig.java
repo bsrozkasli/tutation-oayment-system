@@ -20,7 +20,8 @@ import java.util.List;
 /**
  * Security configuration class for Spring Security.
  * Configures authentication, authorization, CORS, and security filters.
- * Defines which endpoints require authentication and which are publicly accessible.
+ * Defines which endpoints require authentication and which are publicly
+ * accessible.
  *
  * @author Group 2
  */
@@ -55,24 +56,24 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
 
-                        .requestMatchers("/", "/index.html", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/", "/index.html", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
+                        .permitAll()
 
+                        // Static resources for React frontend
+                        .requestMatchers("/static/**", "/manifest.json", "/favicon.ico", "/logo192.png", "/logo512.png")
+                        .permitAll()
 
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/tuition/**").permitAll()
                         .requestMatchers("/api/v1/payment/**").permitAll()
 
-
                         .requestMatchers("/api/v1/banking/tuition/**").authenticated()
-
 
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 
                         .requestMatchers("/api/v1/ai/**").permitAll()
 
-
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(loggingFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
