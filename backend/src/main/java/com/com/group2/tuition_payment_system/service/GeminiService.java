@@ -23,7 +23,7 @@ public class GeminiService {
     @Value("${gemini.api.key}")
     private String apiKey;
 
-    private static final String API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=";
+    private static final String API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=";
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     // Intent Cache - stores parsed intents to avoid repeated API calls
